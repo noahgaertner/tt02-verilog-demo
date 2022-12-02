@@ -5,7 +5,8 @@ module noahgaertner_cpu (input logic [7:0] io_in,
   logic clock, reset;
   assign clock = io_in[0];
   assign reset = io_in[1];
-  typedef enum logic [3:0]{LOAD = 4'd0, STORE = 4'd1, ADD = 4'd2, MUL = 4'd3, WAIT = 4'd4, MAC = 4'd5, SUB = 4'd6, SHIFTL = 4'd7, SHIFTR = 4'd8, JUMPTOIF = 4'd9} prog_t;
+  typedef enum logic [3:0]{LOAD = 4'd0, STORE = 4'd1, ADD = 4'd2, MUL = 4'd3, WAIT = 4'd4, //MAC = 4'd5,
+   SUB = 4'd6, SHIFTL = 4'd7, SHIFTR = 4'd8, JUMPTOIF = 4'd9} prog_t;
   prog_t prog[15:0];
   logic [3:0] data [15:0];
   enum logic [1:0] {LOADPROG=2'd0, LOADDATA=2'd1, SETRUNPT=2'd2,RUNPROG=2'd3} instruction;
@@ -69,9 +70,9 @@ module noahgaertner_cpu (input logic [7:0] io_in,
               pc<= nextpc; regval <= regval >> data[pc]; 
             end
               //shifts the register right by the value at the appropriate addr
-            MAC: begin 
+            /* MAC: begin 
               pc<= nextpc; regval <= regval + (data[pc] * inputdata);
-            end
+            end */
               //multiplies the value at the appropriate addr by the input data and adds it to the register
             JUMPTOIF: //jumps to value if input pin 7 is a one
               //not unconditional to avoid looping forever
