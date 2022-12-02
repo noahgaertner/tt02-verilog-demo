@@ -1,5 +1,70 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg)
 
+# CHIP DOCS
+Documentation for the actual design
+
+### ***NOTE: MUST SEND SYNCHRONOUS RESET IMMEDIATELY BEFORE OPERATION***
+  ## PINS: 
+  - IN:
+    - IN[0]: clock
+    - IN[1]: reset
+    - IN[2]: instruction[0]
+    - IN[3]: instruction[1]
+    - IN[4]: DATA[0]
+    - IN[5]: DATA[1]
+    - IN[6]: DATA[2]
+    - IN[7]: DATA[3]
+  - OUT:
+    - OUT[0]: program counter[0]
+    - OUT[1]: program counter[1]
+    - OUT[2]: program counter[2]
+    - OUT[3]: program counter[3]
+    - OUT[4]: operation register value[0]
+    - OUT[5]: operation register value[1]
+    - OUT[6]: operation register value[2]
+    - OUT[7]: operation register value[3]
+  ## INSTRUCTIONS:
+  ```sv
+    LOADPROG = 2'd0, //loads a program into the program "file" using IN[7:4]
+    LOADDATA = 2'd1, //loads data into the data "file" using IN[7:4]
+    SETRUNPT = 2'd2, //designed to be used right before run, but can also be used to input additional data i guess
+    RUNPROG  = 2'd3 //run the program
+  ```
+  ## ISA:
+  ```sv
+    LOAD = 4'd0, //loads a value from data file into operation register
+    STORE = 4'd1, //stores value from operation register to data file
+    ADD = 4'd2, //adds datac to operation register value
+    MUL = 4'd3, //multiples operation register value by datac
+    SUB = 4'd4, //subtracts datac from operation register value
+    SHIFTL = 4'd5, //shifts operation register value left by datac or 3, 
+    //whichever is less
+    SHIFTR = 4'd6, //shifts operation register value right by datac or 3,
+    //whichever is less
+    JUMPTOIF = 4'd7, //jumps pc to data[value] if io_in[7] is a 1, else 
+    //does nothing
+    LOGICAND = 4'd8,
+    //logical and between operation register value and datac
+    LOGICOR = 4'd9,
+    //logical or between operation register value and datac
+    EQUALS = 4'd10,
+    //equality check between operation register value and datac
+    NEQ = 4'd11,
+    //inequality check between operation register value and datac
+    BITAND = 4'd12,
+    //bitwise and between operation register value and datac    
+    BITOR = 4'd13,
+    //bitwise or between operation register value and datac
+    LOGICNOT = 4'd14,
+    //logical not on operation register value 
+    BITNOT = 4'd15
+    //bitwise not on operation register value
+  ```
+
+
+
+
+
 # What is Tiny Tapeout?
 
 TinyTapeout is an educational project that aims to make it easier and cheaper than ever to get your digital designs manufactured on a real chip!

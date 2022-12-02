@@ -17,7 +17,7 @@ module noahgaertner_cpu (
     SHIFTR = 4'd6, //shifts operation register value right by datac or 3,
     //whichever is less
     JUMPTOIF = 4'd7, //jumps pc to data[value] if io_in[7] is a 1, else 
-    //increments pc by 1 instead 
+    //does nothing
     LOGICAND = 4'd8,
     //logical and between operation register value and datac
     LOGICOR = 4'd9,
@@ -40,10 +40,10 @@ module noahgaertner_cpu (
   prog_t prog[15:0];  //program storage "file"
   logic [3:0] data[15:0];  //data storage :file
   enum logic [1:0] {
-    LOADPROG = 2'd0,
-    LOADDATA = 2'd1,
-    SETRUNPT = 2'd2,
-    RUNPROG  = 2'd3
+    LOADPROG = 2'd0, //loads a program into the program "file"
+    LOADDATA = 2'd1, //loads data into the data "file"
+    SETRUNPT = 2'd2, //designed to be used right before run, but can also be used to input additional data i guess
+    RUNPROG  = 2'd3 //run the program
   } instruction;
   assign instruction = io_in[3:2];  //current instruction
   logic [3:0] pc;  //program counter
@@ -106,13 +106,13 @@ module noahgaertner_cpu (
               //shifts the register left by the value at the appropriate addr, 
               //or 3, whichever is less.
               pc <= npc;
-              regval <= ((datac<4) ? regval<<datac : regval << 3);
+              regval <= regval<<(datac&4'd3);
             end
             SHIFTR: begin
               //shifts the register right by the value at the appropriate addr, 
               //or 3, whichever is less
               pc <= npc;
-              regval <= ((datac<4) ? regval>>datac : regval >> 3);
+              regval <= regval >> (datac&4'd3);
             end
             JUMPTOIF: //jumps to value if input pin 7 is a one
               //not unconditional to avoid looping forever
