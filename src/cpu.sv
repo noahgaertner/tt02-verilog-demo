@@ -9,27 +9,27 @@ module noahgaertner_cpu (
   typedef enum logic [3:0] {
     LOAD = 4'd0, //loads a value from data file into operation register
     STORE = 4'd1, //stores value from operation register to data file
-    ADD = 4'd2, //adds data[pc] to operation register value
-    MUL = 4'd3, //multiples operation register value by data[pc]
-    SUB = 4'd4, //subtracts data[pc] from operation register value
-    SHIFTL = 4'd5, //shifts operation register value left by data[pc] or 3, 
+    ADD = 4'd2, //adds datac to operation register value
+    MUL = 4'd3, //multiples operation register value by datac
+    SUB = 4'd4, //subtracts datac from operation register value
+    SHIFTL = 4'd5, //shifts operation register value left by datac or 3, 
     //whichever is less
-    SHIFTR = 4'd6, //shifts operation register value right by data[pc] or 3,
+    SHIFTR = 4'd6, //shifts operation register value right by datac or 3,
     //whichever is less
     JUMPTOIF = 4'd7, //jumps pc to data[value] if io_in[7] is a 1, else 
     //increments pc by 1 instead 
     LOGICAND = 4'd8,
-    //logical and between operation register value and data[pc]
+    //logical and between operation register value and datac
     LOGICOR = 4'd9,
-    //logical or between operation register value and data[pc]
+    //logical or between operation register value and datac
     EQUALS = 4'd10,
-    //equality check between operation register value and data[pc]
+    //equality check between operation register value and datac
     NEQ = 4'd11,
-    //inequality check between operation register value and data[pc]
+    //inequality check between operation register value and datac
     BITAND = 4'd12,
-    //bitwise and between operation register value and data[pc]    
+    //bitwise and between operation register value and datac    
     BITOR = 4'd13,
-    //bitwise or between operation register value and data[pc]
+    //bitwise or between operation register value and datac
     LOGICNOT = 4'd14,
     //logical not on operation register value 
     BITNOT = 4'd15
@@ -47,70 +47,72 @@ module noahgaertner_cpu (
   } instruction;
   assign instruction = io_in[3:2];  //current instruction
   logic [3:0] pc;  //program counter
+  logic [3:0] datac;
+  prog_t progc;
+  assign progc = prog[pc]; //prog at pc
+  assign datac = data[pc]; //data at pc
   logic [3:0] regval;  //current value being operated on (accumulator)
   assign io_out = {regval, pc};
-  logic [3:0] nextpc;  //next program counter
-  assign nextpc = pc + 1;
-  logic [3:0] inputdata;  //input data
+  logic [3:0] inputdata;
+  logic lastdata3;  //input data
   assign inputdata = io_in[7:4];
+  logic [3:0] npc;
+  assign npc = pc+1;
 
   always_ff @(posedge clock) begin
-    if (reset) begin
+    if (!reset) begin
+      lastdata3 <= inputdata[3];
       case (instruction)
 
         LOADPROG: begin  //loads a program into the program "file"
           prog[pc] <= inputdata;
-          pc <= nextpc;
+          pc <= npc;
         end
         LOADDATA: begin  //loads data into the data "file"
           data[pc] <= inputdata;
-          pc <= nextpc;
+          pc <= npc;
         end
         SETRUNPT: begin //designed to be used right before run, but can also be used to input additional data i guess
           pc <= inputdata;
         end
         RUNPROG: begin  //run the program
-          case (prog[pc])
+          case (progc)
             LOAD: begin
               //loads a value from the data file
-              regval <= data[pc];
-              pc = nextpc;
+              regval <= datac;
+              pc <= npc;
             end
             STORE: begin
               //stores a value into the data file
-              data[data[pc]] <= regval;
-              pc <= nextpc;
+              data[datac] <= regval;
+              pc <= npc;
             end
             ADD: begin
               //adds the value at the appropriate data address to the register
-              regval <= regval + data[pc];
-              pc <= nextpc;
+              regval <= regval + datac;
+              pc <= npc;
             end
             SUB: begin
               //subtracts the value at the appropriate addr from the register
-              pc <= regval - data[pc];
-              pc <= nextpc;
-            end
-            WAIT: begin
-              //waits a clock cycle - not sure why you would ever, but whatever
-              pc <= nextpc;
+              regval <= regval - datac;
+              pc <= npc;
             end
             MUL: begin
               //multiplies the register by the value at the appropriate addr
-              pc <= nextpc;
-              regval <= regval * data[pc];
+              pc <= npc;
+              regval <= regval * datac;
             end
             SHIFTL: begin
               //shifts the register left by the value at the appropriate addr, 
               //or 3, whichever is less.
-              pc <= nextpc;
-              regval <= ((data[pc]<4) ? regval<<data[pc] : regval << 3);
+              pc <= npc;
+              regval <= ((datac<4) ? regval<<datac : regval << 3);
             end
             SHIFTR: begin
               //shifts the register right by the value at the appropriate addr, 
               //or 3, whichever is less
-              pc <= nextpc;
-              regval <= ((data[pc]<4) ? regval>>data[pc] : regval >> 3);
+              pc <= npc;
+              regval <= ((datac<4) ? regval>>datac : regval >> 3);
             end
             JUMPTOIF: //jumps to value if input pin 7 is a one
               //not unconditional to avoid looping forever
@@ -120,50 +122,47 @@ module noahgaertner_cpu (
               //by serializing IO and reassembling, but that takes too much 
               //space
             begin
-              if (inputdata[3] == 1) begin
-                pc <= data[pc];
-              end else begin
-                pc <= nextpc;
-              end
+              pc <= (lastdata3) ? datac : npc;
+              regval <= regval;
             end
             LOGICAND: begin
-              //logical and between regval and data[pc]
-              pc <= nextpc;
-              regval <= regval && data[pc];
+              //logical and between regval and datac
+              pc <= npc;
+              regval <= regval && datac;
             end
             LOGICOR: begin
-              //logical or between regval and data[pc]
-              pc <= nextpc;
-              regval <= regval || data[pc];
+              //logical or between regval and datac
+              pc <= npc;
+              regval <= regval || datac;
             end
             EQUALS: begin
-              //equality check between regval and data[pc]
-              pc <= nextpc;
-              regval <= (regval == data[pc]);
+              //equality check between regval and datac
+              pc <= npc;
+              regval <= (regval == datac);
             end
             NEQ: begin
-              //inequality check between regval and data[pc]
-              pc <= nextpc;
-              regval <= (regval != data[pc]);
+              //inequality check between regval and datac
+              pc <= npc;
+              regval <= (regval != datac);
             end
             BITAND: begin
-              //bitwise and between regval and data[pc]
-              pc <= nextpc;
-              regval <= (regval & data[pc]);
+              //bitwise and between regval and datac
+              pc <= npc;
+              regval <= (regval & datac);
             end
             BITNOT: begin
               //bitwise inversion on regval
-              pc<= nextpc;
+              pc<= npc;
               regval <= ~(regval);
             end
             BITOR: begin
-              //bitwise or between regval and data[pc]
-              pc<= nextpc;
-              regval <= (regval | data[pc]);
+              //bitwise or between regval and datac
+              pc<= npc;
+              regval <= (regval | datac);
             end
             LOGICNOT: begin
               //logical NOT on regval
-              pc <= nextpc;
+              pc <= npc;
               regval <= !regval;
             end
           endcase
@@ -204,6 +203,7 @@ module noahgaertner_cpu (
       prog[13] <= 4'd0;
       prog[14] <= 4'd0;
       prog[15] <= 4'd0;
+      lastdata3 <= 1'd0;
     end
   end
 endmodule
