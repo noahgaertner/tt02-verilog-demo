@@ -1,93 +1,119 @@
 `default_nettype none
-module noahgaertner_cpu (input logic [7:0] io_in,
-  output logic [7:0] io_out
+module noahgaertner_cpu (
+    input  logic [7:0] io_in,
+    output logic [7:0] io_out
 );
   logic clock, reset;
-  assign clock = io_in[0];
-  assign reset = io_in[1];
-  typedef enum logic [3:0]{LOAD = 4'd0, STORE = 4'd1, ADD = 4'd2, MUL = 4'd3, WAIT = 4'd4, //MAC = 4'd5,
-   SUB = 4'd6, SHIFTL = 4'd7, SHIFTR = 4'd8, JUMPTOIF = 4'd9} prog_t;
-  prog_t prog[15:0];
-  logic [3:0] data [15:0];
-  enum logic [1:0] {LOADPROG=2'd0, LOADDATA=2'd1, SETRUNPT=2'd2,RUNPROG=2'd3} instruction;
-  assign instruction = io_in[3:2];
-  logic [3:0]   pc;
-  logic [3:0]   regval;
+  assign clock = io_in[0];  //clock
+  assign reset = io_in[1];  //reset to clear everything
+  typedef enum logic [3:0] {
+    LOAD = 4'd0,
+    STORE = 4'd1,
+    ADD = 4'd2,
+    MUL = 4'd3,
+    WAIT = 4'd4,  //MAC = 4'd5, - this is above util limit
+    SUB = 4'd6,
+    SHIFTL = 4'd7,
+    SHIFTR = 4'd8,
+    JUMPTOIF = 4'd9
+  } prog_t;
+  //yosys doesn't like it if i enum directly instead of typedef w/ memories for 
+  //some reason
+  prog_t prog[15:0];  //program storage "file"
+  logic [3:0] data[15:0];  //data storage :file
+  enum logic [1:0] {
+    LOADPROG = 2'd0,
+    LOADDATA = 2'd1,
+    SETRUNPT = 2'd2,
+    RUNPROG  = 2'd3
+  } instruction;
+  assign instruction = io_in[3:2];  //current instruction
+  logic [3:0] pc;  //program counter
+  logic [3:0] regval;  //current value being operated on (accumulator)
   assign io_out = {regval, pc};
-  logic [3:0]  nextpc;
+  logic [3:0] nextpc;  //next program counter
   assign nextpc = pc + 1;
-  logic [3:0]  inputdata;
+  logic [3:0] inputdata;  //input data
   assign inputdata = io_in[7:4];
-  genvar i;
 
   always_ff @(posedge clock) begin
     if (reset) begin
       case (instruction)
-        
-        LOADPROG: begin //loads a program into the program "file"
+
+        LOADPROG: begin  //loads a program into the program "file"
           prog[pc] <= inputdata;
           pc <= nextpc;
         end
-        LOADDATA: begin //loads data into the data "file"
+        LOADDATA: begin  //loads data into the data "file"
           data[pc] <= inputdata;
           pc <= nextpc;
         end
-        SETRUNPT: begin //designed to be used right before run, but can also reset I guess?
+        SETRUNPT: begin //designed to be used right before run, but can also 
+        //reset I guess?
           pc <= inputdata;
           regval <= 0;
         end
-        RUNPROG: begin //run the program
+        RUNPROG: begin  //run the program
           case (prog[pc])
-            LOAD: begin 
-              regval <= data[pc]; pc = nextpc; 
+            LOAD: begin
+              //loads a value from the data file
+              regval <= data[pc];
+              pc = nextpc;
             end
-             //loads a value from the data file
-            STORE: begin 
-              data[data[pc]] <= regval; pc <= nextpc;
+            STORE: begin
+              //stores a value into the data file
+              data[data[pc]] <= regval;
+              pc <= nextpc;
             end
-             //stores a value into the data file
-            ADD: begin 
-              regval <= regval + data[pc]; pc <= nextpc;
+            ADD: begin
+              //adds the value at the appropriate data address to the register
+              regval <= regval + data[pc];
+              pc <= nextpc;
             end
-             //adds the value at the appropriate data address to the register
-            SUB: begin 
-              pc <= regval - data[pc]; pc<= nextpc;
+            SUB: begin
+              //subtracts the value at the appropriate addr from the register
+              pc <= regval - data[pc];
+              pc <= nextpc;
             end
-             //subtracts the value at the appropriate addr from the register
             WAIT: begin
-              pc <= nextpc; 
-              end
-             //waits a clock cycle - not sure why you would ever, but whatever
-            MUL: begin 
-              pc<= nextpc; regval <= regval * data[pc]; 
+              //waits a clock cycle - not sure why you would ever, but whatever
+              pc <= nextpc;
             end
-             //multiplies the register by the value at the appropriate addr
-            SHIFTL: begin 
-              pc<= nextpc; regval <= regval << data[pc];
+            MUL: begin
+              //multiplies the register by the value at the appropriate addr
+              pc <= nextpc;
+              regval <= regval * data[pc];
             end
+            SHIFTL: begin
               //shifts the register left by the value at the appropriate addr
-            SHIFTR: begin 
-              pc<= nextpc; regval <= regval >> data[pc]; 
+              pc <= nextpc;
+              regval <= regval << data[pc];
             end
+            SHIFTR: begin
               //shifts the register right by the value at the appropriate addr
+              pc <= nextpc;
+              regval <= regval >> data[pc];
+            end
+
             /* MAC: begin 
+              //multiplies the value at the appropriate addr by the input data 
+            //and adds it to the register - this is above the util limit
               pc<= nextpc; regval <= regval + (data[pc] * inputdata);
             end */
-              //multiplies the value at the appropriate addr by the input data and adds it to the register
+
             JUMPTOIF: //jumps to value if input pin 7 is a one
               //not unconditional to avoid looping forever
-            begin 
-              if (inputdata[3]==1) begin 
-                pc <= data[pc]; 
-              end else begin 
-                pc <= nextpc; 
-                end
+            begin
+              if (inputdata[3] == 1) begin
+                pc <= data[pc];
+              end else begin
+                pc <= nextpc;
+              end
             end
           endcase
         end
       endcase
-    end
-    else begin
+    end else begin
       pc <= 0;
       regval <= 0;
       data[0] <= 4'd0;
