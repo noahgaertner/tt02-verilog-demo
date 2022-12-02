@@ -106,13 +106,13 @@ module noahgaertner_cpu (
               //shifts the register left by the value at the appropriate addr, 
               //or 3, whichever is less.
               pc <= npc;
-              regval <= regval<<(datac&4'd3);
+              regval <= ((datac<4) ? regval<<datac : regval << 3);
             end
             SHIFTR: begin
               //shifts the register right by the value at the appropriate addr, 
               //or 3, whichever is less
               pc <= npc;
-              regval <= regval >> (datac&4'd3);
+              regval <= ((datac<4) ? regval>>datac : regval >> 3);
             end
             JUMPTOIF: //jumps to value if input pin 7 is a one
               //not unconditional to avoid looping forever
