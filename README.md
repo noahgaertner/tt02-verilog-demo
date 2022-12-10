@@ -37,10 +37,8 @@ Documentation for the actual design
     ADD = 4'd2, //adds datac to operation register value
     MUL = 4'd3, //multiples operation register value by datac
     SUB = 4'd4, //subtracts datac from operation register value
-    SHIFTL = 4'd5, //shifts operation register value left by datac or 3, 
-    //whichever is less
-    SHIFTR = 4'd6, //shifts operation register value right by datac or 3,
-    //whichever is less
+    SHIFTL = 4'd5, //shifts operation register value left by datac
+    SHIFTR = 4'd6, //shifts operation register value right by datac
     JUMPTOIF = 4'd7, //jumps pc to data[value] if io_in[7] is a 1, else 
     //does nothing
     LOGICAND = 4'd8,
