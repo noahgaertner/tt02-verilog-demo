@@ -7,33 +7,33 @@ module noahgaertner_cpu (
   assign clock = io_in[0];  //clock
   assign reset = io_in[1];  //reset to clear everything
   typedef enum logic [3:0] {
-    LOAD = 4'd0, //loads a value from data file into operation register
-    STORE = 4'd1, //stores value from operation register to data file
-    ADD = 4'd2, //adds datac to operation register value
-    MUL = 4'd3, //multiples operation register value by datac
-    SUB = 4'd4, //subtracts datac from operation register value
-    SHIFTL = 4'd5, //shifts operation register value left by datac or 3, 
+    LOAD = 4'd0, //loads a value from data file into register
+    STORE = 4'd1, //stores value from register to data file
+    ADD = 4'd2, //adds datac to register value
+    MUL = 4'd3, //multiples register value by datac
+    SUB = 4'd4, //subtracts datac from register value
+    SHIFTL = 4'd5, //shifts register value left by datac or 3, 
     //whichever is less
-    SHIFTR = 4'd6, //shifts operation register value right by datac or 3,
+    SHIFTR = 4'd6, //shifts register value right by datac or 3,
     //whichever is less
     JUMPTOIF = 4'd7, //jumps pc to data[value] if io_in[7] is a 1, else 
     //does nothing
     LOGICAND = 4'd8,
-    //logical and between operation register value and datac
+    //logical and between register value and datac
     LOGICOR = 4'd9,
-    //logical or between operation register value and datac
+    //logical or between register value and datac
     EQUALS = 4'd10,
-    //equality check between operation register value and datac
+    //equality check between register value and datac
     NEQ = 4'd11,
-    //inequality check between operation register value and datac
+    //inequality check between register value and datac
     BITAND = 4'd12,
-    //bitwise and between operation register value and datac    
+    //bitwise and between register value and datac    
     BITOR = 4'd13,
-    //bitwise or between operation register value and datac
+    //bitwise or between register value and datac
     LOGICNOT = 4'd14,
-    //logical not on operation register value 
+    //logical not on register value 
     BITNOT = 4'd15
-    //bitwise not on operation register value
+    //bitwise not on register value
   } prog_t;
   //yosys doesn't like it if i enum directly instead of typedef w/ memories for 
   //some reason
