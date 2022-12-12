@@ -19,10 +19,10 @@ Documentation for the actual design
     - OUT[1]: program counter[1]
     - OUT[2]: program counter[2]
     - OUT[3]: program counter[3]
-    - OUT[4]: operation register value[0]
-    - OUT[5]: operation register value[1]
-    - OUT[6]: operation register value[2]
-    - OUT[7]: operation register value[3]
+    - OUT[4]: register value[0]
+    - OUT[5]: register value[1]
+    - OUT[6]: register value[2]
+    - OUT[7]: register value[3]
   ## INSTRUCTIONS:
   ```sv
     LOADPROG = 2'd0, //loads a program into the program "file" using IN[7:4]
@@ -32,31 +32,31 @@ Documentation for the actual design
   ```
   ## ISA:
   ```sv
-    LOAD = 4'd0, //loads a value from data file into operation register
-    STORE = 4'd1, //stores value from operation register to data file
-    ADD = 4'd2, //adds datac to operation register value
-    MUL = 4'd3, //multiples operation register value by datac
-    SUB = 4'd4, //subtracts datac from operation register value
-    SHIFTL = 4'd5, //shifts operation register value left by datac
-    SHIFTR = 4'd6, //shifts operation register value right by datac
+    LOAD = 4'd0, //loads a value from data file into register
+    STORE = 4'd1, //stores value from register to data file
+    ADD = 4'd2, //adds datac to register value
+    MUL = 4'd3, //multiples register value by datac
+    SUB = 4'd4, //subtracts datac from register value
+    SHIFTL = 4'd5, //shifts register value left by datac
+    SHIFTR = 4'd6, //shifts register value right by datac
     JUMPTOIF = 4'd7, //jumps pc to data[value] if io_in[7] is a 1, else 
     //does nothing
     LOGICAND = 4'd8,
-    //logical and between operation register value and datac
+    //logical and between register value and datac
     LOGICOR = 4'd9,
-    //logical or between operation register value and datac
+    //logical or between register value and datac
     EQUALS = 4'd10,
-    //equality check between operation register value and datac
+    //equality check between register value and datac
     NEQ = 4'd11,
-    //inequality check between operation register value and datac
+    //inequality check between register value and datac
     BITAND = 4'd12,
-    //bitwise and between operation register value and datac    
+    //bitwise and between register value and datac    
     BITOR = 4'd13,
-    //bitwise or between operation register value and datac
+    //bitwise or between register value and datac
     LOGICNOT = 4'd14,
-    //logical not on operation register value 
+    //logical not on register value 
     BITNOT = 4'd15
-    //bitwise not on operation register value
+    //bitwise not on register value
   ```
 
 
